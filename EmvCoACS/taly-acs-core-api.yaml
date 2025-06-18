@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taly-acs-core-api
+  labels:
+    app: taly-acs-core-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: taly-acs-core-api
+  template:
+    metadata:
+      labels:
+        app: taly-acs-core-api
+    spec:
+      containers:
+      - name: taly-acs-core-api
+        image: 192.168.159.130:31506/taly-acs-core-api:img-20250618124710
+        ports:
+        - containerPort: 8083
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taly-acs-core-api-svc
+spec:
+  selector:
+    app: taly-acs-core-api
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8083
+  type: LoadBalancer
+
