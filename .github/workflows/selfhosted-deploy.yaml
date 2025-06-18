@@ -52,3 +52,4 @@ jobs:
           export KUBECONFIG=~/admin.conf
           sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
           kubectl apply -f taly-acs-core-api.yaml
+        shell: bash
