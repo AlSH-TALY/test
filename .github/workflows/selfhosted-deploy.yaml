@@ -10,9 +10,10 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted  # or ubuntu-latest if you're not using a self-hosted runner
+    runs-on: self-hosted
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
       - name: Set up Java
@@ -21,24 +22,33 @@ jobs:
           distribution: 'temurin'
           java-version: '18'
 
-      - name: Build project with Maven
-        run: |
-          chmod +x mvnw
-          ./mvnw clean install -DskipTests
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME }}
+      - name: Make mvnw Executable
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x mvnw
 
-      - name: Update image tag in YAML
-        run: |
-          sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
+      - name: Build with Maven Wrapper
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw clean install -DskipTests
         env:
-          IMAGE_NAME: 192.168.159.130:31506/taly-acs-core-api
-          IMAGE_TAG: img-15731293743
+          HOME: /github/home
+
+      - name: Set up Docker
+        run: |
+          sudo systemctl start docker || true
+
+      - name: Build Docker Image
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Push Docker Image to Registry
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          docker push $IMAGE_NAME:$IMAGE_TAG
 
       - name: Deploy to Kubernetes
+        working-directory: ${{ env.PROJECT_DIR }}
         run: |
           export KUBECONFIG=~/admin.conf
+          sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
           kubectl apply -f taly-acs-core-api.yaml
-        env:
-          IMAGE_NAME: 192.168.159.130:31506/taly-acs-core-api
-          IMAGE_TAG: img-15731293743
