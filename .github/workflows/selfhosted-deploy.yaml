@@ -49,7 +49,7 @@ jobs:
       - name: Deploy to Kubernetes
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
-          export KUBECONFIG=~/admin.conf
+          export KUBECONFIG=/home/svc-github/admin.conf
           sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
           kubectl apply -f taly-acs-core-api.yaml
         shell: bash
