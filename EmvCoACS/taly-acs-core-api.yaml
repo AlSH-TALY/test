@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: taly-acs-core-api
-        image: 192.168.159.130:31506/taly-acs-core-api:img-20250618124710
+        image: 192.168.159.130:31506/taly-acs-core-api:{{IMAGE_TAG}}
         ports:
         - containerPort: 8083
         imagePullPolicy: Always
