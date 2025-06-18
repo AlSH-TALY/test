@@ -1,0 +1,42 @@
+name: Self-Hosted Build and Deploy
+
+on:
+  push:
+    branches:
+      - main  # change as needed
+
+jobs:
+  build-push-deploy:
+    runs-on: self-hosted  # this will run on kube-master-01
+
+    env:
+      REGISTRY_HOST: 192.168.159.130:31506
+      IMAGE_NAME: taly-acs-core-api
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set image tag
+      run: echo "IMAGE_TAG=img-$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
+
+    - name: Build JAR
+      run: ./mvnw clean package -DskipTests
+
+    - name: Build Docker image
+      run: |
+        docker build -t $REGISTRY_HOST/$IMAGE_NAME:${{ env.IMAGE_TAG }} .
+
+    - name: Push to local registry
+      run: |
+        docker push $REGISTRY_HOST/$IMAGE_NAME:${{ env.IMAGE_TAG }}
+
+    - name: Replace image tag in deployment YAML
+      run: |
+        sed "s|{{IMAGE_TAG}}|${{ env.IMAGE_TAG }}|g" taly-acs-core-api.yaml > deploy.yaml
+
+    - name: Apply to Kubernetes
+      run: kubectl apply -f deploy.yaml
+
+    - name: Check rollout status
+      run: kubectl rollout status deployment/taly-acs-core-api
