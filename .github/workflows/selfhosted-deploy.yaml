@@ -29,6 +29,8 @@ jobs:
       - name: Build with Maven Wrapper
         working-directory: ${{ env.PROJECT_DIR }}
         run: ./mvnw clean install -DskipTests
+        env:
+          HOME: /github/home
 
       - name: Set up Docker
         run: |
