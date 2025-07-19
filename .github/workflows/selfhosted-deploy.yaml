@@ -1,4 +1,4 @@
-name: Build and Deploy EMVCoACS_V1
+name: Build and Deploy EMVCoACS
 
 on:
   workflow_dispatch:
