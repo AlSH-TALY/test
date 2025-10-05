@@ -1,55 +1,62 @@
-# ConfigMap containing the external logback config
+# ======================================
+# Persistent Volumes (HostPath)
+# ======================================
 apiVersion: v1
-kind: ConfigMap
+kind: PersistentVolume
 metadata:
-  name: taly-acs-core-api-logback-config
-data:
-  logback-spring.xml: |-
-    <?xml version="1.0" encoding="UTF-8"?>
-    <configuration scan="true" scanPeriod="30 seconds">
-        <property name="LOG_PATH" value="/opt/taly/logs" />
-        <property name="APP_NAME" value="taly-acs-core-api" />
-
-        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-
-        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${LOG_PATH}/${APP_NAME}.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
-                <maxHistory>14</maxHistory>
-            </rollingPolicy>
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-
-        <appender name="FILTER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-            <file>${LOG_PATH}/filters.log</file>
-            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>${LOG_PATH}/filters.%d{yyyy-MM-dd}.log</fileNamePattern>
-                <maxHistory>14</maxHistory>
-            </rollingPolicy>
-            <encoder>
-                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-            </encoder>
-        </appender>
-
-        <root level="INFO">
-            <appender-ref ref="CONSOLE" />
-            <appender-ref ref="FILE" />
-        </root>
-
-        <logger name="com.example.demo.filter" level="DEBUG" additivity="false">
-            <appender-ref ref="FILTER_FILE" />
-        </logger>
-    </configuration>
+  name: pv-taly-acs-core-api-conf
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /opt/taly/conf
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-taly-acs-core-api-logs
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /opt/taly/logs
 
 ---
+# ======================================
+# Persistent Volume Claims
+# ======================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: taly-acs-core-api-conf-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+  volumeName: pv-taly-acs-core-api-conf
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: taly-acs-core-api-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: pv-taly-acs-core-api-logs
+
+---
+# ======================================
 # Deployment
+# ======================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -67,32 +74,35 @@ spec:
         app: taly-acs-core-api
     spec:
       containers:
-      - name: taly-acs-core-api
-        image: 192.168.159.130:31506/taly-acs-core-api:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 8083
+        - name: taly-acs-core-api
+          image: 192.168.159.130:31506/taly-acs-core-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
 
-        # Inject JVM argument to load external Logback file
-        env:
-          - name: JAVA_TOOL_OPTIONS
-            value: "-Dlogging.config=/opt/taly/conf/logback-spring.xml"
+          # Point Spring Boot to external logback config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Dlogging.config=/opt/taly/conf/logback-spring.xml"
 
-        volumeMounts:
-          - name: logback-config
-            mountPath: /opt/taly/conf
-          - name: logs
-            mountPath: /opt/taly/logs
+          volumeMounts:
+            - name: conf
+              mountPath: /opt/taly/conf
+            - name: logs
+              mountPath: /opt/taly/logs
 
       volumes:
-        - name: logback-config
-          configMap:
-            name: taly-acs-core-api-logback-config
+        - name: conf
+          persistentVolumeClaim:
+            claimName: taly-acs-core-api-conf-pvc
         - name: logs
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: taly-acs-core-api-logs-pvc
 
 ---
+# ======================================
 # Service
+# ======================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -105,3 +115,4 @@ spec:
       port: 8083
       targetPort: 8083
   type: LoadBalancer
+
