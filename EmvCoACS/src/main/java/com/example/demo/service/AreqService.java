@@ -24,6 +24,7 @@ public class AreqService {
 		aresResponse.setMessageType("ARes");
 		aresResponse.setAcsTransID("sample-acs-trans-id");
 		aresResponse.setTransStatus("Y");
+		System.out.println("Adding logs chnages for testing purpose");
 
 		// Post the response back to the dsURL (asynchronously or synchronously)
 		//postAresResponse(aresResponse, areqRequest.getDsURL());
