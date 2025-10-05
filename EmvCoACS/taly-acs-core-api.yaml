@@ -64,7 +64,7 @@ metadata:
   labels:
     app: taly-acs-core-api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: taly-acs-core-api
