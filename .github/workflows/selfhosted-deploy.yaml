@@ -51,6 +51,17 @@ jobs:
         working-directory: ${{ env.PROJECT_DIR }}
         run: |
           export KUBECONFIG=/home/svc-github/admin.conf
+
+          echo "Updating image tag..."
           sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
+
+          echo "Applying ConfigMap for logback-spring.xml..."
+          kubectl create configmap taly-acs-core-api-logback-config \
+            --from-file=k8s/logback-spring.xml \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Deploying application..."
           kubectl apply -f taly-acs-core-api.yaml
-        shell: bash
+
+          echo "Restarting pods..."
+          kubectl rollout restart deployment/taly-acs-core-api

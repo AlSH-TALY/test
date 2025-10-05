@@ -1,3 +1,55 @@
+# ConfigMap containing the external logback config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taly-acs-core-api-logback-config
+data:
+  logback-spring.xml: |-
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration scan="true" scanPeriod="30 seconds">
+        <property name="LOG_PATH" value="/opt/taly/logs" />
+        <property name="APP_NAME" value="taly-acs-core-api" />
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/${APP_NAME}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>14</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <appender name="FILTER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_PATH}/filters.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/filters.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>14</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE" />
+            <appender-ref ref="FILE" />
+        </root>
+
+        <logger name="com.example.demo.filter" level="DEBUG" additivity="false">
+            <appender-ref ref="FILTER_FILE" />
+        </logger>
+    </configuration>
+
+---
+# Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,11 +68,31 @@ spec:
     spec:
       containers:
       - name: taly-acs-core-api
-        image: 192.168.159.130:31506/taly-acs-core-api:img-20250618124710
+        image: 192.168.159.130:31506/taly-acs-core-api:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8083
-        imagePullPolicy: Always
+
+        # Inject JVM argument to load external Logback file
+        env:
+          - name: JAVA_TOOL_OPTIONS
+            value: "-Dlogging.config=/opt/taly/conf/logback-spring.xml"
+
+        volumeMounts:
+          - name: logback-config
+            mountPath: /opt/taly/conf
+          - name: logs
+            mountPath: /opt/taly/logs
+
+      volumes:
+        - name: logback-config
+          configMap:
+            name: taly-acs-core-api-logback-config
+        - name: logs
+          emptyDir: {}
+
 ---
+# Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -33,4 +105,3 @@ spec:
       port: 8083
       targetPort: 8083
   type: LoadBalancer
-
