@@ -22,7 +22,7 @@ public class AreqService {
 		aresResponse.setDsTransID(areqRequest.getDsTransID());
 		aresResponse.setMessageVersion(areqRequest.getMessageVersion());
 		aresResponse.setMessageType("ARes");
-		aresResponse.setAcsTransID("sample-acs-trans-id");
+		//aresResponse.setAcsTransID("sample-acs-trans-id");
 		aresResponse.setTransStatus("Y");
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		System.out.println("\n Adding logs chnages for testing purpose \n");
