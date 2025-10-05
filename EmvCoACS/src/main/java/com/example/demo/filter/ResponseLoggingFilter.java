@@ -3,6 +3,8 @@ package com.example.demo.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import jakarta.servlet.Filter;
@@ -15,6 +17,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public class ResponseLoggingFilter implements Filter {
 
+    private static final Logger logger = LoggerFactory.getLogger(ResponseLoggingFilter.class);
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // Initialization code, if any
@@ -23,24 +27,23 @@ public class ResponseLoggingFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        // Wrap the response to cache the body
-        CustomHttpServletResponseWrapper customResponseWrapper = new CustomHttpServletResponseWrapper((HttpServletResponse) response);
-        ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(customResponseWrapper);
 
-        // Continue the request-response chain
-        
-        
-        //String jsonBody = request.getReader().readLine().toString();
+        // Wrap the response to allow content caching
+        CustomHttpServletResponseWrapper customResponseWrapper =
+                new CustomHttpServletResponseWrapper((HttpServletResponse) response);
+        ContentCachingResponseWrapper wrappedResponse =
+                new ContentCachingResponseWrapper(customResponseWrapper);
 
-        
-        
-        wrappedResponse.addHeader("X-Request-ID",response.getCharacterEncoding());
+        // Add custom header if needed
+        wrappedResponse.addHeader("X-Request-ID", response.getCharacterEncoding());
+
+        // Continue filter chain
         chain.doFilter(request, wrappedResponse);
 
-        // Log response details after the chain has processed
+        // Log response details after processing
         logResponseDetails(wrappedResponse, customResponseWrapper);
 
-        // Copy the content of the wrapper to the original response
+        // Copy cached content back to actual response
         wrappedResponse.copyBodyToResponse();
     }
 
@@ -49,21 +52,30 @@ public class ResponseLoggingFilter implements Filter {
         // Cleanup code, if any
     }
 
-    private void logResponseDetails(ContentCachingResponseWrapper wrappedResponse, CustomHttpServletResponseWrapper customResponseWrapper) throws IOException {
-        System.out.println("================================ Start of Response ======================================");
-        System.out.println("Response Details:");
-        System.out.println("Status: " + wrappedResponse.getStatus());
+    private void logResponseDetails(ContentCachingResponseWrapper wrappedResponse,
+                                    CustomHttpServletResponseWrapper customResponseWrapper)
+            throws IOException {
 
-        // Log headers from the custom response wrapper
-        System.out.println("Headers:");
-        customResponseWrapper.getHeaders().forEach((headerName, headerValues) -> 
-            headerValues.forEach(headerValue -> System.out.println(headerName + ": " + headerValue))
+        logger.info("================================ Start of Response ======================================");
+        logger.info("Response Details:");
+        logger.info("Status: {}", wrappedResponse.getStatus());
+
+        logger.info("Headers:");
+        customResponseWrapper.getHeaders().forEach((headerName, headerValues) ->
+                headerValues.forEach(headerValue ->
+                        logger.debug("{}: {}", headerName, headerValue)
+                )
         );
 
         // Read and log the response body
         byte[] body = wrappedResponse.getContentAsByteArray();
-        String bodyString = new String(body, StandardCharsets.UTF_8);
-        System.out.println("Body: " + bodyString);
-        System.out.println("================================ End of Response ======================================");
+        if (body.length > 0) {
+            String bodyString = new String(body, StandardCharsets.UTF_8);
+            logger.debug("Body: {}", bodyString);
+        } else {
+            logger.debug("Body: [empty]");
+        }
+
+        logger.info("================================ End of Response ======================================");
     }
 }
