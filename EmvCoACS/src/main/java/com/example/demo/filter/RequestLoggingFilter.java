@@ -47,7 +47,7 @@ public class RequestLoggingFilter implements Filter {
 
         byte[] body = request.getContentAsByteArray();
         String bodyString = new String(body, StandardCharsets.UTF_8);
-        logger.debug("Body: {}", bodyString);
+        logger.info("Body: {}", bodyString);
         logger.info("================================ End of Request ======================================");
     }
 }
