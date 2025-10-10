@@ -60,7 +60,7 @@ public class ResponseLoggingFilter implements Filter {
         logger.info("Response Details:");
         logger.info("Status: {}", wrappedResponse.getStatus());
 
-        logger.info("Headers:");
+        logger.debug("Headers:");
         customResponseWrapper.getHeaders().forEach((headerName, headerValues) ->
                 headerValues.forEach(headerValue ->
                         logger.debug("{}: {}", headerName, headerValue)

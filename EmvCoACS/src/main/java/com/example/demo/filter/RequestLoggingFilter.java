@@ -36,9 +36,9 @@ public class RequestLoggingFilter implements Filter {
     private void logRequestDetails(ContentCachingRequestWrapper request) throws IOException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
 
-        logger.info("================================ Start of Request ======================================");
-        logger.info("Endpoint: {}", httpRequest.getRequestURI());
-        logger.info("Method: {}", httpRequest.getMethod());
+        logger.debug("================================ Start of Request ======================================");
+        logger.debug("Endpoint: {}", httpRequest.getRequestURI());
+        logger.debug("Method: {}", httpRequest.getMethod());
         logger.info("Headers:");
         httpRequest.getHeaderNames().asIterator()
                 .forEachRemaining(headerName ->
@@ -47,7 +47,7 @@ public class RequestLoggingFilter implements Filter {
 
         byte[] body = request.getContentAsByteArray();
         String bodyString = new String(body, StandardCharsets.UTF_8);
-        logger.info("Body: {}", bodyString);
-        logger.info("================================ End of Request ======================================");
+        logger.debug("Body: {}", bodyString);
+        logger.debug("================================ End of Request ======================================");
     }
 }
