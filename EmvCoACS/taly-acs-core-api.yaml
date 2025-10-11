@@ -1,31 +1,4 @@
 # ======================================
-# Persistent Volumes (HostPath)
-# ======================================
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-taly-acs-core-api-conf
-spec:
-  capacity:
-    storage: 100Mi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: /opt/taly/conf
----
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: pv-taly-acs-core-api-logs
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  hostPath:
-    path: /opt/taly/logs
-
----
 # ======================================
 # Persistent Volume Claims
 # ======================================
@@ -39,7 +12,7 @@ spec:
   resources:
     requests:
       storage: 100Mi
-  volumeName: pv-taly-acs-core-api-conf
+  volumeName: taly-acs-api-conf-pv
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -51,7 +24,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  volumeName: pv-taly-acs-core-api-logs
+  volumeName: taly-acs-api-logs-pv
 
 ---
 # ======================================
