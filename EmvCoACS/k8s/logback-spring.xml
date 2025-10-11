@@ -41,7 +41,7 @@
     </root>
 
     <!-- Filter package logger -->
-    <logger name="com.example.demo.filter" level="DEBUG" additivity="false">
+    <logger name="com.example.demo.filter" level="INFO" additivity="false">
         <appender-ref ref="FILTER_FILE" />
     </logger>
 </configuration>
