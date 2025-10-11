@@ -8,7 +8,7 @@ metadata:
   name: taly-acs-core-api-conf-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 100Mi
@@ -20,7 +20,7 @@ metadata:
   name: taly-acs-core-api-logs-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
