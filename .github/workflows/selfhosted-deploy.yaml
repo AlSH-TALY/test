@@ -5,7 +5,7 @@ on:
     branches: ["main"]
 
 env:
-  IMAGE_NAME: 192.168.159.130:31506/taly-acs-core-api
+  IMAGE_NAME: 192.168.159.240:5000/taly-acs-core-api
   IMAGE_TAG: img-${{ github.run_id }}
   PROJECT_DIR: EmvCoACS
 
