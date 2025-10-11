@@ -1,34 +1,30 @@
-# ======================================
-# ======================================
 # Persistent Volume Claims
 # ======================================
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taly-acs-core-api-conf-pvc
-  spec:
-    accessModes:
+spec:
+  accessModes:
     - ReadWriteMany
-    resources:
-      requests:
-        storage: 200Mi
-    volumeMode: Filesystem
-    volumeName: taly-acs-api-conf-pv
+  resources:
+    requests:
+      storage: 200Mi
+  volumeName: taly-acs-api-conf-pv
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: taly-acs-core-api-logs-pvc
-  spec:
-    accessModes:
+spec:
+  accessModes:
     - ReadWriteMany
-    resources:
-      requests:
-        storage: 2Gi
-    volumeMode: Filesystem
-    volumeName: taly-acs-api-logs-pv
-
+  resources:
+    requests:
+      storage: 200Mi
+  volumeName: taly-acs-api-logs-pv
 ---
+# ======================================
 # ======================================
 # Deployment
 # ======================================
