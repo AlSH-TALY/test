@@ -1,0 +1,67 @@
+name: Build and Deploy EMVCoACS
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  IMAGE_NAME: 192.168.159.240:5000/taly-acs-core-api
+  IMAGE_TAG: img-${{ github.run_id }}
+  PROJECT_DIR: EmvCoACS
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '18'
+
+      - name: Make mvnw Executable
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: chmod +x mvnw
+
+      - name: Build with Maven Wrapper
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: ./mvnw clean install -DskipTests
+        env:
+          HOME: /github/home
+
+      - name: Set up Docker
+        run: |
+          sudo systemctl start docker || true
+
+      - name: Build Docker Image
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      - name: Push Docker Image to Registry
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          docker push $IMAGE_NAME:$IMAGE_TAG
+
+      - name: Deploy to Kubernetes
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: |
+          export KUBECONFIG=/home/svc-github/admin.conf
+
+          echo "Updating image tag..."
+          sed -i "s#image:.*#image: $IMAGE_NAME:$IMAGE_TAG#g" taly-acs-core-api.yaml
+
+          echo "Applying ConfigMap for logback-spring.xml..."
+          kubectl create configmap taly-acs-core-api-logback-config \
+            --from-file=k8s/logback-spring.xml \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "Deploying application..."
+          kubectl apply -f taly-acs-core-api.yaml
+
+          echo "Restarting pods..."
+          kubectl rollout restart deployment/taly-acs-core-api

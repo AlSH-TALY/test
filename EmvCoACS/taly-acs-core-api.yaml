@@ -1,3 +1,33 @@
+# Persistent Volume Claims
+# ======================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: taly-acs-core-api-conf-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+  volumeName: taly-acs-api-conf-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: taly-acs-core-api-logs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 200Mi
+  volumeName: taly-acs-api-logs-pv
+---
+# ======================================
+# ======================================
+# Deployment
+# ======================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,12 +45,35 @@ spec:
         app: taly-acs-core-api
     spec:
       containers:
-      - name: taly-acs-core-api
-        image: 192.168.159.130:31506/taly-acs-core-api:{{IMAGE_TAG}}
-        ports:
-        - containerPort: 8083
-        imagePullPolicy: Always
+        - name: taly-acs-core-api
+          image: 192.168.159.240:5000/taly-acs-core-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8083
+
+          # Point Spring Boot to external logback config
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Dlogging.config=/opt/taly/conf/logback-spring.xml"
+
+          volumeMounts:
+            - name: conf
+              mountPath: /opt/taly/conf
+            - name: logs
+              mountPath: /opt/taly/logs
+
+      volumes:
+        - name: conf
+          persistentVolumeClaim:
+            claimName: taly-acs-core-api-conf-pvc
+        - name: logs
+          persistentVolumeClaim:
+            claimName: taly-acs-core-api-logs-pvc
+
 ---
+# ======================================
+# Service
+# ======================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -32,5 +85,5 @@ spec:
     - protocol: TCP
       port: 8083
       targetPort: 8083
-  type: LoadBalancer
+  type: ClusterIP
 
