@@ -36,3 +36,16 @@ jobs:
       - name: Build with Maven
         working-directory: Student-Management-System
         run: mvn -B clean package
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: Student-Management-System
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/training:StudentManagementSystem_v1.0.0
