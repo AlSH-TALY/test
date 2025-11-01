@@ -12,10 +12,10 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'StudentManagementSystem/**'
+      - 'Student-Management-System/**'
   pull_request:
     paths:
-      - 'StudentManagementSystem/**'
+      - 'Student-Management-System/**'
   workflow_dispatch:
 
 jobs:
@@ -34,5 +34,5 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        working-directory: StudentManagementSystem
+        working-directory: Student-Management-System
         run: mvn -B clean package
