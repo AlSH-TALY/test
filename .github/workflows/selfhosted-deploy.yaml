@@ -22,7 +22,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '18'
-          check-certificate: false
 
       - name: Make mvnw Executable
         working-directory: ${{ env.PROJECT_DIR }}
