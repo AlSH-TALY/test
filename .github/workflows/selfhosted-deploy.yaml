@@ -63,5 +63,5 @@ jobs:
           echo "Deploying application..."
           kubectl apply -f taly-acs-core-api.yaml
 
-          echo "Restarting pods..."
+          echo "Restarting pods...."
           kubectl rollout restart deployment/taly-acs-core-api
